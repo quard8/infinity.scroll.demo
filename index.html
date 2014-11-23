@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Infinite scroll demo</title>
+    <link rel="stylesheet" href="css/style.css">
+    
+  </head>
+  <body>
+    <div id="list">
+    	
+    </div>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+    <script src="js/infinityscroll.js"></script>
+	<script src="js/sink.js"></script>
+    <script>
+    $(function() {
+    	var infinityScroll = new InfinityScroll({
+    		el: $('#list'),
+    		sink: new InfinityScrollTestSink(),
+    		itemClass: '.item',
+    		itemHeight: 18,
+    		template: function(item) {
+    			return '<div class="item">id: ' + item.id + ', name: ' 
+	    			+ item.name + ', description: ' + item.description + '</div>';
+    		}
+    	});
+    });
+    </script>
+  </body>
+</html>
