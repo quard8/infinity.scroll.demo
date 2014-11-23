@@ -1,6 +1,6 @@
 ### Infinity Scroll Demo
 
- Currently supports only *<div>* elements.
+ Currently supports only *div* elements.
 
  There are few glitches with fast scrolling.
 
