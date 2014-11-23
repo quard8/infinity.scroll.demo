@@ -4,4 +4,4 @@
 
  There are few glitches with fast scrolling.
 
- Demo: [http://quard.ru/labs/inifity/](http://quard.ru/labs/inifity/ "Demo")
+ Demo: [http://quard.ru/labs/infinity/](http://quard.ru/labs/infinity/ "Demo")
