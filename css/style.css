@@ -1,17 +1,17 @@
 #list {
-	height: 300px;
-	width: 500px;
-	border: 1px solid #CCCCCC;
-	overflow: scroll;
-	padding-top: 5px;
+    height: 300px;
+    width: 500px;
+    border: 1px solid #CCCCCC;
+    overflow: scroll;
+    padding-top: 5px;
 } 
 
 .innerscroll {
-	position: relative;
-	overflow: auto;
+    position: relative;
+    overflow: auto;
 }
 
-.item {
-	height: 18px;
-	position: absolute;
+.row {
+    height: 18px;
+    position: absolute;
 }

@@ -8,23 +8,28 @@
   </head>
   <body>
     <div id="list">
-    	
+
     </div>
+    <div class="pager"></div>
+
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
     <script src="js/infinityscroll.js"></script>
-	<script src="js/sink.js"></script>
+    <script src="js/sink.js"></script>
     <script>
     $(function() {
-    	var infinityScroll = new InfinityScroll({
-    		el: $('#list'),
-    		sink: new InfinityScrollTestSink(),
-    		itemClass: '.item',
-    		itemHeight: 18,
-    		template: function(item) {
-    			return '<div class="item">id: ' + item.id + ', name: ' 
-	    			+ item.name + ', description: ' + item.description + '</div>';
-    		}
-    	});
+        var infinityScroll = new InfinityScroll({
+            el: $('#list'),
+            sink: new InfinityScrollTestSink(),
+            itemClass: '.item',
+            itemHeight: 18,
+            template: function(item) {
+                return '<div class="item">id: ' + item.id + ', name: '
+                    + item.name + ', description: ' + item.description + '</div>';
+            },
+            positionUpdated: function(from, to, size) {
+                $('.pager').html(from + ' - ' + to + ' / ' + size);
+            }
+        });
     });
     </script>
   </body>
