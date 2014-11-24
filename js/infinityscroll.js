@@ -100,7 +100,6 @@
                 }
 
                 $innerScroll.height(data.length * itemHeight);
-                render();
                 loading = false;
             });
         }
@@ -170,7 +169,7 @@
             $el.on('scroll', throttle(scrollHandler, 100));
             //load data for first time
             fetch();
-            actual_render()
+            render()
         }
 
         init();
