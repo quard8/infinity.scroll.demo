@@ -24,6 +24,15 @@
         }
     };
 
+    window.requestAnimFrame = (function(){
+        return  window.requestAnimationFrame       ||
+            window.webkitRequestAnimationFrame ||
+            window.mozRequestAnimationFrame    ||
+            function( callback ){
+                window.setTimeout(callback, 1000 / 60);
+            };
+    })();
+
     var InfinityScroll = function(options) {
         var $el = options.el,
             $innerScroll = null,
@@ -31,11 +40,12 @@
             template = options.template,
             loading = false,
             itemHeight = options.itemHeight,
-            limit = options.limit || 30,
+
             visibleIndex = 0,
             data = [],
             prefetchCount = 6,
             visibleCount = Math.ceil($el.height() / itemHeight),
+            limit = visibleCount * 6, //to be sure we have enought data
             cb = options.positionUpdated;
 
 
@@ -74,10 +84,10 @@
 
             if( !loading && scrollTop + $el.height() + checkPoint > $el[0].scrollHeight ) {
                 fetch()
-            } else {
-                render();
             }
         }
+
+
 
         function fetch() {
             loading = true;
@@ -87,12 +97,18 @@
                 }
 
                 $innerScroll.height(data.length * itemHeight);
-                render();
                 loading = false;
             });
         }
 
         var current = [];
+
+        function actual_render() {
+            window.requestAnimFrame(function() {
+                render();
+                actual_render();
+            })
+        }
 
         function render() {
 
@@ -104,9 +120,9 @@
             for (var i = v; i < v + visibleCount + prefetchCount * 2; i++) {
                 if (i < data.length) {
                     item = data[i];
-                    if ($innerScroll.find('div[data-idx="' + item.index() + '"]').length === 0) {
+                    if ($innerScroll.find('div.idx' + item.index() + '').length === 0) {
                         var top = item.y();
-                        html += '<div class="row" data-idx="' + i + '" style="top: ' + top + 'px">' + template(item.getData()) + '</div>'
+                        html += '<div class="row idx' + i + '" style="top: ' + top + 'px">' + template(item.getData()) + '</div>'
                     }
 
                     current.push(item);
@@ -114,28 +130,31 @@
 
             }
 
-            $innerScroll.append(html);
-            var remove = [];
-            for (i = 0; i < old.length; i++) {
-                item = old[i];
-                if (current.indexOf(item) == -1) {
-                    remove.push($innerScroll.find('div[data-idx="' + item.index() + '"]'));
+            $innerScroll[0].innerHTML += html;
+            setTimeout(function() {
+                var remove = [];
+                for (i = 0; i < old.length; i++) {
+                    item = old[i];
+                    if (current.indexOf(item) == -1) {
+                        remove.push($innerScroll.find('div.idx' + item.index() + ''));
+                    }
                 }
-            }
 
-            if (remove.length) {
-                var $stuff = $();
-                for (i = 0; i < remove.length; i++) {
-                    $stuff = $stuff.add(remove[i]);
+                if (remove.length) {
+                    var $stuff = $();
+                    for (i = 0; i < remove.length; i++) {
+                        $stuff = $stuff.add(remove[i]);
+                    }
+                    $stuff.remove();
                 }
-                $stuff.remove();
-            }
 
 
-            if (cb) {
-                //we always see 1 row less
-                cb(visibleIndex, visibleCount + visibleIndex - 1, data.length);
-            }
+                if (cb) {
+                    //we always see 1 row less
+                    cb(visibleIndex, visibleCount + visibleIndex - 1, data.length);
+                }
+            }, 1);
+
         }
 
 
@@ -146,6 +165,7 @@
             $el.on('scroll', throttle(scrollHandler, 100));
             //load data for first time
             fetch();
+            actual_render()
         }
 
         init();
