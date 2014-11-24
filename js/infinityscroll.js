@@ -43,10 +43,11 @@
 
             visibleIndex = 0,
             data = [],
-            prefetchCount = 6,
+            prefetchCount = 10,
             visibleCount = Math.ceil($el.height() / itemHeight),
             limit = visibleCount * 6, //to be sure we have enought data
-            cb = options.positionUpdated;
+            cb = options.positionUpdated,
+            scrollTop = 0;
 
 
         var throttle = function(func, wait, options) {
@@ -77,14 +78,16 @@
             };
         };
 
+        var checkPoint = 100;
+
         function scrollHandler() {
-            var checkPoint = 100,
-                scrollTop = $el.scrollTop();
-                visibleIndex = Math.ceil(scrollTop / itemHeight);
+            scrollTop = $el.scrollTop();
+            visibleIndex = Math.ceil(scrollTop / itemHeight);
 
             if( !loading && scrollTop + $el.height() + checkPoint > $el[0].scrollHeight ) {
                 fetch()
             }
+            render();
         }
 
 
@@ -97,6 +100,7 @@
                 }
 
                 $innerScroll.height(data.length * itemHeight);
+                render();
                 loading = false;
             });
         }
@@ -104,23 +108,25 @@
         var current = [];
 
         function actual_render() {
-            window.requestAnimFrame(function() {
-                render();
-                actual_render();
-            })
+            //window.requestAnimFrame(function() {
+
+              //  actual_render();
+            //})
         }
-
+        var lastScrollTop = 1;
         function render() {
+            //dont render if nothing happens
 
+            if (Math.abs(scrollTop - lastScrollTop) === 0) return;
             var old = current;
             current = [];
 
             var v = visibleIndex - prefetchCount <= 0 ? 0 : visibleIndex - prefetchCount,
                 html = '', item;
-            for (var i = v; i < v + visibleCount + prefetchCount * 2; i++) {
+            for (var i = v; i < v + visibleCount + prefetchCount * 1.5; i++) {
                 if (i < data.length) {
                     item = data[i];
-                    if ($innerScroll.find('div.idx' + item.index() + '').length === 0) {
+                    if ($innerScroll.find('div.idx' + item.index()).length === 0) {
                         var top = item.y();
                         html += '<div class="row idx' + i + '" style="top: ' + top + 'px">' + template(item.getData()) + '</div>'
                     }
@@ -131,12 +137,11 @@
             }
 
             $innerScroll[0].innerHTML += html;
-            setTimeout(function() {
-                var remove = [];
+                 var remove = [];
                 for (i = 0; i < old.length; i++) {
                     item = old[i];
                     if (current.indexOf(item) == -1) {
-                        remove.push($innerScroll.find('div.idx' + item.index() + ''));
+                        remove.push($innerScroll.find('div.idx' + item.index()));
                     }
                 }
 
@@ -153,8 +158,8 @@
                     //we always see 1 row less
                     cb(visibleIndex, visibleCount + visibleIndex - 1, data.length);
                 }
-            }, 1);
 
+            lastScrollTop = scrollTop;
         }
 
 
