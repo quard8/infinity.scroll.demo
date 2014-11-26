@@ -43,40 +43,32 @@
 
             visibleIndex = 0,
             data = [],
-            prefetchCount = 10,
             visibleCount = Math.ceil($el.height() / itemHeight),
-            limit = visibleCount * 6, //to be sure we have enought data
+            limit = 100, //to be sure we have enought data
             cb = options.positionUpdated,
             scrollTop = 0;
 
 
-        var throttle = function(func, wait, options) {
-            var context, args, result;
-            var timeout = null;
-            var previous = 0;
-            options || (options = {});
-            var later = function() {
-              previous = new Date;
-              timeout = null;
-              result = func.apply(context, args);
-            };
-            return function() {
-              var now = new Date;
-              if (!previous && options.leading === false) previous = now;
-              var remaining = wait - (now - previous);
-              context = this;
-              args = arguments;
-              if (remaining <= 0) {
-                clearTimeout(timeout);
-                timeout = null;
-                previous = now;
-                result = func.apply(context, args);
-              } else if (!timeout && options.trailing !== false) {
-                timeout = setTimeout(later, remaining);
-              }
-              return result;
-            };
-        };
+
+        (function() {
+            var vendors = ['webkit', 'moz'];
+            for (var i = 0; i < vendors.length && !window.requestAnimationFrame; ++i) {
+                var vp = vendors[i];
+                window.requestAnimationFrame = window[vp+'RequestAnimationFrame'];
+                window.cancelAnimationFrame = (window[vp+'CancelAnimationFrame']
+                || window[vp+'CancelRequestAnimationFrame']);
+            }
+            if (!window.requestAnimationFrame || !window.cancelAnimationFrame) {
+                var lastTime = 0;
+                window.requestAnimationFrame = function(callback) {
+                    var now = new Date().getTime();
+                    var nextTime = Math.max(lastTime + 16, now);
+                    return setTimeout(function() { callback(lastTime = nextTime); },
+                        nextTime - now);
+                };
+                window.cancelAnimationFrame = clearTimeout;
+            }
+        }());
 
         var checkPoint = 100;
 
@@ -87,7 +79,8 @@
             if( !loading && scrollTop + $el.height() + checkPoint > $el[0].scrollHeight ) {
                 fetch()
             }
-            render();
+            window.requestAnimationFrame(render)
+
         }
 
 
@@ -98,67 +91,46 @@
                 for (var i = 0; i < items.length; i++) {
                     data.push(new ScrollItem(items[i], data.length, itemHeight));
                 }
-
                 $innerScroll.height(data.length * itemHeight);
                 loading = false;
             });
         }
 
-        var current = [];
+        var cache = [];
 
-        function actual_render() {
-            //window.requestAnimFrame(function() {
-
-              //  actual_render();
-            //})
+        function prerender()
+        {
+            for (var i = 0; i < visibleCount * 3; i++) {
+                var e = $('<div/>').addClass('row');
+                cache.push(e[0]);
+                $innerScroll.append(e);
+            }
+            render()
         }
-        var lastScrollTop = 1;
+
+
         function render() {
-            //dont render if nothing happens
 
-            if (Math.abs(scrollTop - lastScrollTop) === 0) return;
-            var old = current;
-            current = [];
+            var v = visibleIndex - visibleCount <= 0 ? 0 : visibleIndex - visibleCount, item, ci = 0;
 
-            var v = visibleIndex - prefetchCount <= 0 ? 0 : visibleIndex - prefetchCount,
-                html = '', item;
-            for (var i = v; i < v + visibleCount + prefetchCount * 1.5; i++) {
+            for (var i = v; i < v + visibleCount * 2 + 10; i++) {
                 if (i < data.length) {
                     item = data[i];
-                    if ($innerScroll.find('div.idx' + item.index()).length === 0) {
-                        var top = item.y();
-                        html += '<div class="row idx' + i + '" style="top: ' + top + 'px">' + template(item.getData()) + '</div>'
-                    }
+                    var cached_row = cache[ci],
+                        top = item.y();
 
-                    current.push(item);
+                        cached_row.style.top = top + 'px';
+                        cached_row.innerHTML = template(item.getData());
+
+                    ci++;
                 }
-
             }
 
-            $innerScroll[0].innerHTML += html;
-                 var remove = [];
-                for (i = 0; i < old.length; i++) {
-                    item = old[i];
-                    if (current.indexOf(item) == -1) {
-                        remove.push($innerScroll.find('div.idx' + item.index()));
-                    }
-                }
 
-                if (remove.length) {
-                    var $stuff = $();
-                    for (i = 0; i < remove.length; i++) {
-                        $stuff = $stuff.add(remove[i]);
-                    }
-                    $stuff.remove();
-                }
-
-
-                if (cb) {
-                    //we always see 1 row less
-                    cb(visibleIndex, visibleCount + visibleIndex - 1, data.length);
-                }
-
-            lastScrollTop = scrollTop;
+            if (cb) {
+                //we always see 1 row less
+                cb(visibleIndex, visibleCount + visibleIndex - 1, data.length);
+            }
         }
 
 
@@ -166,10 +138,10 @@
         function init() {
             $innerScroll = $('<div class="innerscroll"></div>');
             $el.append($innerScroll);
-            $el.on('scroll', throttle(scrollHandler, 100));
+            $el.on('scroll', scrollHandler);
             //load data for first time
             fetch();
-            render()
+            prerender();
         }
 
         init();

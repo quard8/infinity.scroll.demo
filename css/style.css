@@ -16,3 +16,7 @@
     position: absolute;
     box-sizing: border-box;
 }
+
+.item {
+    height: 18px;
+}
