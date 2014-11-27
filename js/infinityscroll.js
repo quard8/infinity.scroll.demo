@@ -34,123 +34,111 @@
     })();
 
     var InfinityScroll = function(options) {
-        var $el = options.el,
-            $innerScroll = null,
-            sink = options.sink,
-            template = options.template,
-            loading = false,
-            itemHeight = options.itemHeight,
 
-            visibleIndex = 0,
-            data = [],
-            visibleCount = Math.ceil($el.height() / itemHeight),
-            limit = 100, //to be sure we have enought data
-            cb = options.positionUpdated,
-            scrollTop = 0;
+        this.$el = options.el;
+        this.template = options.template;
+        this.sink = options.sink;
+
+        this.itemHeight = options.itemHeight;
+        this.itemClass = options.itemClass;
+        this.cb = options.positionUpdated;
 
 
 
-        (function() {
-            var vendors = ['webkit', 'moz'];
-            for (var i = 0; i < vendors.length && !window.requestAnimationFrame; ++i) {
-                var vp = vendors[i];
-                window.requestAnimationFrame = window[vp+'RequestAnimationFrame'];
-                window.cancelAnimationFrame = (window[vp+'CancelAnimationFrame']
-                || window[vp+'CancelRequestAnimationFrame']);
+        this.init.apply(this);
+    };
+
+    InfinityScroll.prototype = {
+
+
+        scrollHandler: function() {
+            this.scrollTop = this.$el.scrollTop();
+            this.visibleIndex = Math.ceil(this.scrollTop / this.itemHeight);
+
+            if( !this.loading && this.scrollTop + this.$el.height() + this.checkPoint > this.$el[0].scrollHeight ) {
+                this.fetch()
             }
-            if (!window.requestAnimationFrame || !window.cancelAnimationFrame) {
-                var lastTime = 0;
-                window.requestAnimationFrame = function(callback) {
-                    var now = new Date().getTime();
-                    var nextTime = Math.max(lastTime + 16, now);
-                    return setTimeout(function() { callback(lastTime = nextTime); },
-                        nextTime - now);
-                };
-                window.cancelAnimationFrame = clearTimeout;
-            }
-        }());
+            window.requestAnimationFrame($.proxy(this.render, this))
 
-        var checkPoint = 100;
-
-        function scrollHandler() {
-            scrollTop = $el.scrollTop();
-            visibleIndex = Math.ceil(scrollTop / itemHeight);
-
-            if( !loading && scrollTop + $el.height() + checkPoint > $el[0].scrollHeight ) {
-                fetch()
-            }
-            window.requestAnimationFrame(render)
-
-        }
+        },
 
 
-
-        function fetch() {
-            loading = true;
-            sink.fetch(data.length, limit, function(items) {
+        fetch: function() {
+            this.loading = true;
+            var ctx = this;
+            this.sink.fetch(this.data.length, this.limit, function(items) {
                 for (var i = 0; i < items.length; i++) {
-                    data.push(new ScrollItem(items[i], data.length, itemHeight));
+                    ctx.data.push(new ScrollItem(items[i], ctx.data.length, ctx.itemHeight));
                 }
-                $innerScroll.height(data.length * itemHeight);
-                loading = false;
+                ctx.$innerScroll.height(ctx.data.length * ctx.itemHeight);
+                ctx.loading = false;
+                ctx.render()
             });
-        }
+        },
 
-        var cache = [];
 
-        function prerender()
+
+        prerender: function()
         {
-            for (var i = 0; i < visibleCount * 3; i++) {
-                var e = $('<div/>').addClass('row');
-                cache.push(e[0]);
-                $innerScroll.append(e);
+            for (var i = 0; i <  this.visibleCount * 3; i++) {
+                var e = $('<div/>').addClass(this.itemClass);
+                this.cache.push(e[0]);
+                this.$innerScroll.append(e);
             }
-            render()
-        }
+
+        },
 
 
-        function render() {
+        render: function() {
 
-            var v = visibleIndex - visibleCount <= 0 ? 0 : visibleIndex - visibleCount, item, ci = 0;
+            var v = this.visibleIndex - this.visibleCount <= 0 ? 0 : this.visibleIndex - this.visibleCount, item, ci = 0;
 
-            for (var i = v; i < v + visibleCount * 2 + 10; i++) {
-                if (i < data.length) {
-                    item = data[i];
-                    var cached_row = cache[ci],
+            for (var i = v; i < v + this.visibleCount * 2 + 10; i++) {
+                if (i < this.data.length) {
+                    item = this.data[i];
+                    var cached_row = this.cache[ci],
                         top = item.y();
+                    cached_row.style.top = top + 'px';
+                    cached_row.innerHTML = this.template(item.getData());
 
-                        cached_row.style.top = top + 'px';
-                        cached_row.innerHTML = template(item.getData());
+
 
                     ci++;
                 }
             }
 
 
-            if (cb) {
+            if (this.cb) {
                 //we always see 1 row less
-                cb(visibleIndex, visibleCount + visibleIndex - 1, data.length);
+                this.cb(this.visibleIndex, this.visibleCount + this.visibleIndex - 1, this.data.length);
             }
-        }
+        },
 
 
+        init: function() {
 
-        function init() {
-            $innerScroll = $('<div class="innerscroll"></div>');
-            $el.append($innerScroll);
-            $el.on('scroll', scrollHandler);
+            this.$innerScroll = $('<div class="innerscroll"></div>');
+
+
+            this.loading = false;
+
+            this.visibleIndex = 0;
+            this.data = [];
+            this.visibleCount = Math.ceil(this.$el.height() / this.itemHeight);
+            this.limit = 100; //to be sure we have enought data
+
+            this.scrollTop = 0;
+            this.cache = [];
+
+            this.checkPoint = 100;
+            this.$el.append(this.$innerScroll);
+            this.$el.on('scroll', $.proxy(this.scrollHandler, this));
             //load data for first time
-            fetch();
-            prerender();
+            this.prerender();
+            this.fetch();
+
+
         }
-
-        init();
-
-        return {
-            position: function() {
-
-            }
-        };
     };
     factory.InfinityScroll = InfinityScroll;
 })(window);

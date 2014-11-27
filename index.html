@@ -12,6 +12,12 @@
     </div>
     <div class="pager"></div>
 
+
+    <div id="table">
+
+    </div>
+    <div class="pager2"></div>
+
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
     <script src="js/infinityscroll.js"></script>
     <script src="js/sink.js"></script>
@@ -20,7 +26,7 @@
         var infinityScroll = new InfinityScroll({
             el: $('#list'),
             sink: new InfinityScrollTestSink(),
-            itemClass: '.item',
+            itemClass: 'row',
             itemHeight: 18,
             template: function(item) {
                 return '<div class="item">id: ' + item.id + ', name: '
@@ -28,6 +34,20 @@
             },
             positionUpdated: function(from, to, size) {
                 $('.pager').html(from + ' - ' + to + ' / ' + size);
+            }
+        });
+
+        var infinityTable = new InfinityScroll({
+            el: $('#table'),
+            sink: new InfinityScrollTestSink(),
+            itemClass: 'table-row',
+            itemHeight: 30,
+            template: function(item) {
+                return '<div class="cell l0">id: ' + item.id + '</div><div class="cell l1">name: '
+                        + item.name + '</div><div class="cell l2">description: ' + item.description + '</div>';
+            },
+            positionUpdated: function(from, to, size) {
+                $('.pager2').html(from + ' - ' + to + ' / ' + size);
             }
         });
     });

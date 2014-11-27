@@ -20,3 +20,52 @@
 .item {
     height: 18px;
 }
+
+#table {
+    height: 300px;
+    width: 500px;
+    border: 1px solid #CCCCCC;
+    overflow: scroll;
+}
+
+.table-row {
+    height: 30px;
+    border: 1px solid #aaaaaa;
+    width:500px;
+    position: absolute;
+}
+
+.cell {
+    position: absolute;
+
+    border-right: 1px dotted silver;
+    border-bottom-color: silver;
+    overflow: hidden;
+    -o-text-overflow: ellipsis;
+    text-overflow: ellipsis;
+    vertical-align: middle;
+    z-index: 1;
+    margin: 0;
+    white-space: nowrap;
+    cursor: default;
+    padding-left: 4px;
+    padding-right: 4px;
+    line-height: 30px;
+    font-size: 12pt;
+}
+
+.l0 {
+    left: 0px;
+}
+
+.l1 {
+    left: 100px;
+}
+
+.l2 {
+    left: 300px;
+}
+
+.l3 {
+    left: 100px;
+}
